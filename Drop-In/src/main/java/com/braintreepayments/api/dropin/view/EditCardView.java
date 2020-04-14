@@ -119,39 +119,64 @@ public class EditCardView extends LinearLayout implements OnCardFormFieldFocused
                 errors.errorFor("creditCard") != null;
     }
 
-    public void setErrors(ErrorWithResponse errors) {
+    /**
+     * Sets error messages in the invalid fields if any.
+     * @param errors received from server
+     * @return true if there were errors but none were displayed
+     */
+    public boolean setErrors(ErrorWithResponse errors) {
+        boolean pendingError = false;
+
         BraintreeError formErrors = errors.errorFor("unionPayEnrollment");
         if (formErrors == null) {
             formErrors = errors.errorFor("creditCard");
         }
 
         if (formErrors != null) {
+            pendingError = true;
+
             if (formErrors.errorFor("expirationYear") != null ||
                     formErrors.errorFor("expirationMonth") != null ||
                     formErrors.errorFor("expirationDate") != null) {
                 mCardForm.setExpirationError(getContext().getString(R.string.bt_expiration_invalid));
+                if (mCardForm.getExpirationDateEditText().getVisibility() == VISIBLE) {
+                    pendingError = false;
+                }
             }
 
             if (formErrors.errorFor("cvv") != null) {
                 mCardForm.setCvvError(getContext().getString(R.string.bt_cvv_invalid,
                         getContext().getString(
                                 mCardForm.getCardEditText().getCardType().getSecurityCodeName())));
+                if (mCardForm.getCvvEditText().getVisibility() == VISIBLE) {
+                    pendingError = false;
+                }
             }
 
             if (formErrors.errorFor("billingAddress") != null) {
                 mCardForm.setPostalCodeError(getContext().getString(R.string.bt_postal_code_invalid));
+                if (mCardForm.getPostalCodeEditText().getVisibility() == VISIBLE) {
+                    pendingError = false;
+                }
             }
 
             if (formErrors.errorFor("mobileCountryCode") != null) {
                 mCardForm.setCountryCodeError(getContext().getString(R.string.bt_country_code_invalid));
+                if (mCardForm.getCountryCodeEditText().getVisibility() == VISIBLE) {
+                    pendingError = false;
+                }
             }
 
             if (formErrors.errorFor("mobileNumber") != null) {
                 mCardForm.setMobileNumberError(getContext().getString(R.string.bt_mobile_number_invalid));
+                if (mCardForm.getMobileNumberEditText().getVisibility() == VISIBLE) {
+                    pendingError = false;
+                }
             }
         }
 
         mAnimatedButtonView.showButton();
+        return pendingError;
     }
 
     public void useUnionPay(AppCompatActivity activity, boolean useUnionPay, boolean debitCard) {

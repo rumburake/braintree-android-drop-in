@@ -1,5 +1,8 @@
 package com.braintreepayments.api.dropin;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.telephony.PhoneNumberUtils;
 import android.text.TextUtils;
@@ -42,8 +45,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.DialogFragment;
 
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
@@ -355,10 +361,10 @@ public class AddCardActivity extends BaseActivity implements ConfigurationListen
                 mEnrollmentCardView.setErrors(errorResponse);
             } else if (mAddCardView.isCardNumberError(errorResponse)) {
                 mAddCardView.setErrors(errorResponse);
-                mEditCardView.setErrors(errorResponse);
+                displayErrors(errorResponse);
                 setState(mState, CARD_ENTRY);
             } else if (mEditCardView.isEditCardError(errorResponse)) {
-                mEditCardView.setErrors(errorResponse);
+                displayErrors(errorResponse);
                 setState(mState, DETAILS_ENTRY);
             } else {
                 finish(error);
@@ -375,6 +381,29 @@ public class AddCardActivity extends BaseActivity implements ConfigurationListen
                 mBraintreeFragment.sendAnalyticsEvent("sdk.exit.server-unavailable");
             }
             finish(error);
+        }
+    }
+
+    private void displayErrors(ErrorWithResponse errorResponse) {
+        boolean pendingError = mEditCardView.setErrors(errorResponse);
+        if (pendingError) {
+            DialogFragment errorDialog = new DialogFragment() {
+                @NonNull
+                @Override
+                public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity())
+                            .setTitle("Error")
+                            .setMessage("Something Wrong")
+                            .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    // nothing
+                                }
+                            });
+                    return super.onCreateDialog(savedInstanceState);
+                }
+            };
+            errorDialog.show(getSupportFragmentManager(), "Card Error");
         }
     }
 
